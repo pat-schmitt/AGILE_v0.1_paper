@@ -1,0 +1,1089 @@
+%% Copernicus Publications Manuscript Preparation Template for LaTeX Submissions
+%% ---------------------------------
+%% This template should be used for copernicus.cls
+%% The class file and some style files are bundled in the Copernicus Latex Package, which can be downloaded from the different journal webpages.
+%% For further assistance please contact Copernicus Publications at: production@copernicus.org
+%% https://publications.copernicus.org/for_authors/manuscript_preparation.html
+
+
+%% Please use the following documentclass and journal abbreviations for preprints and final revised papers.
+
+%% 2-column papers and preprints
+\documentclass[journal abbreviation, manuscript]{copernicus}
+
+
+
+%% Journal abbreviations (please use the same for preprints and final revised papers)
+
+
+% Advances in Geosciences (adgeo)
+% Advances in Radio Science (ars)
+% Advances in Science and Research (asr)
+% Advances in Statistical Climatology, Meteorology and Oceanography (ascmo)
+% Aerosol Research (ar)
+% Annales Geophysicae (angeo)
+% Archives Animal Breeding (aab)
+% Atmospheric Chemistry and Physics (acp)
+% Atmospheric Measurement Techniques (amt)
+% Biogeosciences (bg)
+% Climate of the Past (cp)
+% DEUQUA Special Publications (deuquasp)
+% Drinking Water Engineering and Science (dwes)
+% Earth Surface Dynamics (esurf)
+% Earth System Dynamics (esd)
+% Earth System Science Data (essd)
+% E&G Quaternary Science Journal (egqsj)
+% EGUsphere (egusphere) | This is only for EGUsphere preprints submitted without relation to an EGU journal.
+% European Journal of Mineralogy (ejm)
+% Fossil Record (fr)
+% Geochronology (gchron)
+% Geographica Helvetica (gh)
+% Geoscience Communication (gc)
+% Geoscientific Instrumentation, Methods and Data Systems (gi)
+% Geoscientific Model Development (gmd)
+% History of Geo- and Space Sciences (hgss)
+% Hydrology and Earth System Sciences (hess)
+% Journal of Bone and Joint Infection (jbji)
+% Journal of Micropalaeontology (jm)
+% Journal of Sensors and Sensor Systems (jsss)
+% Magnetic Resonance (mr)
+% Mechanical Sciences (ms)
+% Natural Hazards and Earth System Sciences (nhess)
+% Nonlinear Processes in Geophysics (npg)
+% Ocean Science (os)
+% Polarforschung - Journal of the German Society for Polar Research (polf)
+% Primate Biology (pb)
+% Proceedings of the International Association of Hydrological Sciences (piahs)
+% Safety of Nuclear Waste Disposal (sand)
+% Scientific Drilling (sd)
+% SOIL (soil)
+% Solid Earth (se)
+% State of the Planet (sp)
+% The Cryosphere (tc)
+% Weather and Climate Dynamics (wcd)
+% Web Ecology (we)
+% Wind Energy Science (wes)
+
+
+%% \usepackage commands included in the copernicus.cls:
+%\usepackage[german, english]{babel}
+%\usepackage{tabularx}
+%\usepackage{cancel}
+%\usepackage{multirow}
+%\usepackage{supertabular}
+%\usepackage{algorithmic}
+%\usepackage{algorithm}
+%\usepackage{amsthm}
+%\usepackage{float}
+%\usepackage{subfig}
+%\usepackage{rotating}
+\usepackage{pdflscape}
+\usepackage{booktabs}
+\usepackage{comment}
+
+
+\begin{document}
+
+\title{The Open Global Glacier Data Assimilation Framework (AGILE) v0.1}
+
+
+% \Author[affil]{given_name}{surname}
+
+\Author[1]{Patrick}{Schmitt}
+\Author[1,2]{Fabien}{Maussion}
+\Author[3]{Daniel}{Goldberg}
+\Author[4]{Philipp}{Gregor}
+
+\affil[1]{Department of Atmospheric and Cryospheric Sciences, University of Innsbruck, Innsbruck, Austria}
+\affil[2]{School of Geographical Sciences, University of Bristol, Bristol, United Kingdom}
+\affil[3]{School of Geosciences, University of Edinburgh, Edinburgh, United Kingdom}
+\affil[4]{Meteorologisches Institut, Ludwig-Maximilians-Universität München, München, Germany}
+
+%% The [] brackets identify the author with the corresponding affiliation. 1, 2, 3, etc. should be inserted.
+
+%% If an author is deceased, please mark the respective author name(s) with a dagger, e.g. "\Author[2,$\dag$]{Anton}{Smith}", and add a further "\affil[$\dag$]{deceased, 1 July 2019}".
+
+%% If authors contributed equally, please mark the respective author names with an asterisk, e.g. "\Author[2,*]{Anton}{Smith}" and "\Author[3,*]{Bradley}{Miller}" and add a further affiliation: "\affil[*]{These authors contributed equally to this work.}".
+
+
+\correspondence{Patrick Schmitt (patrick.schmitt@uibk.ac.at)}
+
+\runningtitle{TEXT}
+
+\runningauthor{TEXT}
+
+%% These dates will be inserted by Copernicus Publications during the typesetting process.
+
+
+\firstpage{1}
+
+\maketitle
+
+
+
+\begin{abstract}
+The growing availability of glacier observations poses a challenge for models to integrate this heterogeneous information in a dynamically consistent way. At the same time, estimates of current glacier volume and area remain uncertain, as many global inventories and thickness datasets date back to the early 2000s. We present the Open Global Glacier Data Assimilation Framework (AGILE), a time-dependent variational method inspired by 4D-Var data assimilation. AGILE is built on a reimplementation of the OGGM flowline glacier evolution model in PyTorch, enabling full differentiability through automatic differentiation (AD).
+We test AGILE v0.1 in a series of idealized experiments designed to reflect common initialization and calibration scenarios in global glacier modeling. The goal is to recover glacier bed topography and distributed ice volume in 2020 through transient calibration, based on dynamical simulations starting in 1980. In these experiments, we assume a perfectly known mass balance and fixed ice dynamics parameters. While this setup simplifies real-world complexity, it allows us to isolate and evaluate the core functionality of the approach.
+Our results show that AGILE efficiently optimizes multiple control variables by leveraging AD-derived gradients, requiring only a few iterations to substantially improve upon initial guesses. We also examine the potential to reconstruct earlier glacier states (e.g., in 1980) without direct observations and find that this is fundamentally limited by the diffusive nature of glacier dynamics, even in an idealized setting. Overall, our experiments demonstrate AGILE’s potential as a flexible and efficient data assimilation framework. Its ability to integrate diverse datasets in a dynamically consistent manner makes it a promising tool for future real-world glacier modeling applications.
+\end{abstract}
+
+
+% \copyrightstatement{TEXT} %% This section is optional and can be used for copyright transfers.
+
+
+\introduction  %% \introduction[modified heading if necessary]
+\label{sec:introduction}
+
+Mountain glaciers are retreating globally \citep{GlaMBIE2025, Hugonnet2021, Zemp2015}, causing significant impacts on sea level rise \citep[e.g.,][]{Marzeion2020, Rounce2023, Slangen2022, Zemp2019}, freshwater resources \citep[e.g.,][]{Aguayo2024, Huss2018, Ultee2022, Wimberly2024}, and ecosystems \citep[e.g.,][]{Bosson2023, Cannone2008, Gobbi2021}. Predicting these impacts requires dynamic glacier evolution models that rely on past observations to simulate glacier behaviour into the future. However, many glaciers are located in remote and hard-to-access regions, making direct measurements difficult to obtain and scarce. As a result, global models are highly dependent on Earth observation (EO) data from satellites.
+
+Early EO datasets mainly included glacier outlines \citep[e.g.,][]{RGI, RGI7} and digital elevation models \citep[e.g.,][]{COPDEM, NASADEM}. Recently, more glacier-specific datasets have become available \citep[e.g.,][]{Hugonnet2021, Millan2022}, allowing global glacier models to shift towards using glacier-specific observations for calibration rather than relying on regional averages or data from a few well-studied glaciers \citep{Zekollari2024,Marzeion2012}. This shift is reflected in the design choices of the eight large-scale glacier models participating in the recent Glacier Model Intercomparison Project 3 \citep[GlacierMIP3;][]{Zekollari2025}.
+
+% explain common things of GlacierMIP3 methods
+The GlacierMIP3 models adopt different calibration and initialization strategies, but share many common features and rely on the same datasets. The initial glacier surface geometry and corresponding start date are defined using RGI version 6 outlines \citep{RGI} and their associated timestamps. Mass balance is calibrated separately by matching to a geodetic mass balance observation over a period of approximately 20 years, using data from \citet{Hugonnet2021} (seven models) or \citet{Shean2020} (one model), while assuming a fixed glacier geometry during this period. All models rely on the consensus ice thickness estimates from \citet{Farinotti2019}, either by directly using the distributed fields or by matching total glacier volumes on a glacier-specific or regional basis.
+
+% a little bit mor detail about models using a spin up in GlacierMIP3
+Three models include a spin-up during initialization to account for glacier evolution prior to the outline date. In these cases, a past glacier state is defined, and the model is run forward in time to match specific targets. The Community Ice Sheet Model v2.1 \citep[CISM2;][]{Lipscomb2019} matches the ice thickness field, the Global Glacier Evolution Model ice flow \citep[GloGEMflow;][]{Zekollari2019} targets the glacier-specific total volume and glacier length from the outline, and the Open Global Glacier Model \citep[OGGM;][]{Maussion2019} uses the glacier total area, total volume and geodetic mass balance to additionally refine its previously calibrated mass balance by accounting for evolving surface geometry \citep{Aguayo2024}.
+
+% some other regional methods (Hartl and Cook)
+Outside GlacierMIP3, an adapted version of OGGM’s dynamic spin-up was extended to incorporate a second glacier outline in a small region of the Alps, enabling the model to simultaneously match observed area and volume changes at regional scale for the first time \citep{Hartl2024}. This enhancement allowed performance improvements when tested against additional validation data and increased confidence in the model’s projections through 2100 compared to the setup relying solely on globally available datasets.
+
+Another recent approach in the Alps is presented by \citet{Cook2023}, who use the Instructed Glacier Model \citep[IGM;][]{Jouvet2022}, a deep learning based 3D ice flow model. IGM assimilates various observations such as distributed thickness data \citep[GlaThiDa;][]{Welty2020} and surface velocity fields \citep{Millan2022} to initialize glaciers in a dynamically consistent state. The transient simulation then begins from this point, removing the need for a spin up. However, all inputs must correspond to the same timestamp, such as the outline date, since the method is limited to snapshot inversions. IGM also focuses only on ice dynamics and bed reconstruction and does not include a dedicated mass balance model.
+
+% limitations of GlacierMIP3 and other methods
+Despite these efforts, current approaches face several limitations. Most models neglect past glacier evolution during initialization and do not account for surface geometry changes during calibration. They are tailored to currently available global datasets and struggle to incorporate new observation types or repeated measurements in a seamless way, limiting their flexibility to use all available data on a glacier-specific scale. It is also often implicitly assumed that all observations apply at the outline timestamp. Furthermore, many methods rely on computationally intensive optimization schemes where only one parameter is adjusted at a time, or they apply steady state assumptions to manage the general problem of overparameterization in global glacier modelling \citep[e.g.,][]{Rounce2020}.
+
+% what the ideal method should be able to do
+To overcome these limitations, an ideal calibration method should ensure dynamic consistency, be able to use temporally distributed observations, avoid assumptions about the glacier’s dynamic state, and allow the simultaneous optimization of multiple model parameters. It must also remain computationally efficient to be applicable at regional and global scales.
+
+% the idea behind AGILE
+To move closer to the transient calibration of large scale glacier models, we present a proof-of-concept for the Open Global Glacier Data Assimilation Framework (AGILE). AGILE is based on a time-dependent variational assimilation approach, inspired by 4DVar methods \citep[][]{Lorenc1997}. It iteratively adjusts all control variables of a dynamic glacier evolution model during a transient (forward) simulation to minimize a cost function that quantifies the mismatch between model output and available observations. To ensure computational efficiency, AGILE is implemented in PyTorch, a machine learning framework \citep[][]{PyTorch}, which enables the use of automatic differentiation (AD). AD-based methods have previously been applied to snapshot inversions in regional glacier modeling \citep[][]{Cook2023} and in ice sheet modeling \citep[][]{Brinkerhoff2013}, as well as to transient assimilation in ice sheet modeling \citep[][]{Goldberg2013, Recinos2023}. To our knowledge, AGILE represents the first application of a transient AD-based assimilation approach in the context of global glacier modeling.
+
+% what is implemented in AGILE v0.1 and how do we test it
+In this study, we introduce AGILE v0.1, which reimplements the dynamic flowline model of OGGM in PyTorch to make it fully differentiable through AD (Sect. \ref{sec:methods}). We evaluate the implementation using idealized experiments with synthetic glaciers and observations designed to reflect globally available datasets (Sect. \ref{sec:experiments}). The objective is to initialize a dynamically consistent glacier by optimizing bed topography and ice volume distribution as control variables, assuming a perfectly known mass balance and fixed dynamic parameters. While these assumptions simplify real-world complexity, they allow us to isolate and assess how effectively AD guides the optimization of control variables during a transient model run (Sect. \ref{sec:results}). We conclude by discussing the broader implications of our results and outlining future directions for real-world applications (Sect. \ref{sec:conclusion}).
+
+
+\section{Methods}
+\label{sec:methods}
+
+% build inside the OGGM-framework, what is in the next paragraphs
+AGILE is developed as an open-source extension of the Open Global Glacier Model (OGGM) framework \citep{Maussion2019}, with the code publicly available at \href{https://github.com/OGGM/AGILE}{github.com/OGGM/AGILE}, and version 0.1 archived on Zenodo \citep{AGILEv0.1}. The following sections provide a detailed description of the underlying methodology and its individual components.
+
+
+\subsection{General principles}
+\label{sec:general_principles}
+
+The general approach of AGILE is illustrated in Figure \ref{fig:fundamental_principle}. A set of initial control variables, referred to as the first guess and which may represent model parameters, boundary conditions, or both, is iteratively adjusted to minimize the mismatch between the output of a glacier evolution model and available observations. This mismatch is quantified by a cost function, which combines the discrepancies across all observational targets into a single value, with each contribution normalized by its associated uncertainty. In addition, regularization terms are included in the cost function to address the ill-posed nature of the problem and to reduce the risk of overfitting. The optimization aims to minimize this cost function by systematically adjusting the control variables.
+
+To support this process efficiently, AGILE leverages automatic differentiation (AD) through PyTorch. This enables flexible definition of control variables while still allowing the calculation of their gradients with respect to the cost function. These gradients guide the optimization and allow for efficient and simultaneous updates of all variables. More technical details about the AD implementation in PyTorch are provided in Appendix \ref{appendix:AD_in_Pytorch}.
+
+\begin{figure}[t]
+\includegraphics[width=8.3cm]{fig01.png}
+\caption{Principle workflow of AGILE: Starting with a First Guess at the top, an initial glacier evolution model run is performed (blue line). The mismatch between the model output and observations, in particular one total volume, one volume change and one total area, is calculated using a cost function. If the cost function has not reached a minimum, all control variables are updated simultaneously using AD, and a new glacier evolution model run is conducted (orange line).}
+\label{fig:fundamental_principle}
+\end{figure}
+
+
+\subsection{Glacier representation and forward model}
+\label{sec:Glacier_representation_and_forward_model}
+
+% forward model a reimplemented version of OGGM using a new numeric scheme (which is also supported in OGGM) using PyTorch
+AGILE re-implements the glacier evolution model from OGGM \citep{Maussion2019} in PyTorch, making it fully differentiable. The model is based on the shallow ice approximation to compute depth-integrated ice velocity (equation \ref{eqn:shallow_ice_velocity}) and a mass conservation equation, where changes in ice thickness at a point equal the mass balance input minus the divergence of the ice flux (equation \ref{eqn:dC/dt}). Since version 1.6.0, OGGM uses a semi-implicit numerical scheme instead of the scheme described in \cite{Maussion2019}. Details on this scheme are provided in Appendix \ref{appendix:semi_impicit}.
+
+% flowline representation elevation bands same as OGGM but also GloGEMflow,
+AGILE uses the same 1.5D flowline representation as OGGM. In this approach, glacier dynamics are computed along a flowline with variable surface widths. The flowlines are derived from geographical input data, including glacier outlines and a digital elevation model (DEM), using the 'elevation band flowlines' method \citep[e.g.][]{Huss2012, Huss2015, Werder2019}, which preserves the glacier's area-height distribution. Each grid point along the flowline is assigned a trapezoidal bed shape with a 45° wall-slope, and the bottom width depends on the glacier bed height (see Sect. \ref{subsec:cost_obs} for more details). The 1.5D flowline setup reduces spatial complexity compared to full 2D or 3D models, making it computationally feasible to track the full computational graph during model runs to be used for AD, without running into memory limitations (see Appendix \ref{appendix:AD_in_Pytorch} for details about AD in PyTorch).
+
+% MB Model wrapper (using TI-Model of OGGM), 
+To integrate height-dependent Mass Balance (MB) forcing into the computation of gradients, AGILE includes a PyTorch wrapper (see Appendix \ref{appendix:mb_model_wrapper} for details). This accounts for changes in MB forcing caused by dynamically evolving glacier surface heights. The wrapper allows the use of any OGGM-compatible MB model for dynamic simulations without re-implementing it in PyTorch. However, this approach does not support gradient computation for MB model parameters (e.g., the melt factor in temperature index models), but this can be added in the future.
+
+
+% cost function/regularisation/ill-posed problem (O=cost function, C=ill-posed nature, A=regularisation)
+\subsection{Cost function}
+\label{sec:cost_function}
+
+% two main parts of the cost function Jobs and Jreg, what is the purpose of the two
+
+The cost function is defined as
+
+\begin{equation}
+    \label{eqn:general_cost_function}
+    \mathcal{J}(\boldsymbol{\Theta}) = \mathcal{J}_{obs}(\boldsymbol{\Theta}) + \lambda \mathcal{J}_{reg}(\boldsymbol{\Theta}),
+\end{equation}
+
+\noindent where $\mathcal{J}{obs}$ represents the target observational component (see Sect. \ref{subsec:cost_obs}), and $\mathcal{J}{reg}$ is the regularization component (see Sect. \ref{subsec:cost_reg}). The control variables are denoted with $\boldsymbol{\Theta}$ (see Sect. \ref{sec:control_variabls}), and $\lambda$ determines the weight of the regularization term relative to the observational term.
+
+\subsubsection{Target observational cost component}
+\label{subsec:cost_obs}
+% Jobs: which observations can be used within AGILE at the moment
+The target observational component, $\mathcal{J}_{obs}$, measures the alignment of the model with the target observations using squared differences. For a single observed quantity $x$, it is defined as
+
+\begin{equation}
+    \mathcal{J}_{obs,x} = \frac{(x_{mdl} - x_{obs})^2}{\sigma^2_{x}},
+\end{equation}
+
+\noindent where $x_{mdl}$ is the modeled quantity, $x_{obs}$ is the corresponding target observation, and $\sigma_x$ represents the uncertainty of the target observation. This ensures that discrepancies within the uncertainty bounds have values smaller than one and also scales different types of target observations. For multiple observations, $\mathcal{J}_{obs}$ is averaged over all normalized discrepancies.
+
+\begin{equation}
+\mathcal{J}_{obs} = \frac{1}{n_{obs}} \sum^{n_{obs}}_j \mathcal{J}_{obs,j},
+\end{equation}
+
+\noindent where $n_{obs}$ equals the number of considered target observations.
+
+In this study, we focus on target observations that are readily available from global datasets. Specifically, a single area–height distribution, one geodetic mass balance value ($\Delta M$), and one total glacier volume estimate ($V$). The choice of these variables and the implications for real-world applications are discussed in Sect. \ref{sec:introduction}.
+
+The area–height distribution is derived from a glacier outline and a DEM, and is also used to define the elevation-band flowlines (see Sect. \ref{sec:Glacier_representation_and_forward_model}). As a result, we aim to match the surface heights ($sfc$) at each grid point along the flowline at the outline year. By doing so, we also match the area–height distribution, since it was used to construct the flowlines. To maintain this relationship during minimisation, the bottom width of the trapezoidal bed shape is adjusted at each iteration based on the current bed height estimate (see control variables in Sect. \ref{sec:control_variabls}). This preserves the link between surface height and the corresponding elevation-band area at each grid point.
+
+As an example, the target observational cost for volume is given by
+
+\begin{equation}
+    \mathcal{J}_{obs,V} = \frac{(V_{mdl} - V_{obs})^2}{\sigma^2_{V}},
+\end{equation}
+
+\noindent while for surface height along the flowline it is
+
+\begin{equation}
+    \mathcal{J}_{obs,s} = \frac{\sum_{i=1}^{n_x} (sfc^i_{mdl} - sfc^i_{obs})^2}{\sigma^2_{sfc}n_x},
+\end{equation}
+
+\noindent where, $n_x$ is the number of grid points and $sfc^i$ is the surface height at grid point $i$. Here, the volume represents a glacier-integrated observation, while the surface heights are an observation along the flowline, incorporating the observed area-height distribution. AGILE's flexible cost function design allows for expanding the range of supported target observations as long as corresponding model counterparts exist.
+
+\subsubsection{Regularization cost component}
+\label{subsec:cost_reg}
+% Jreg: which reg-terms are used
+While $\mathcal{J}{obs}$ ensures alignment with target observations, the problem can remain ill-posed or prone to overfitting to observations. Regularization, $\mathcal{J}_{reg}$, introduces constraints to address these issues, typically focusing on smoothness \citep[e.g.][]{Goldberg2013, Fuerst2017, Jouvet2022}. The regularization term is scaled to ensure compatibility with $\mathcal{J}_{obs}$, similar to the observation uncertainties.
+
+In this study, we apply regularization solely to enforce a smooth glacier bed. This is defined as
+
+\begin{equation}
+    \mathcal{J}_{reg,bed} = \frac{1}{\gamma_{bed}} \sum_{i=0}^{n_x - 1} \left(\frac{b^{i+1} - b^{i}}{\Delta x}\right)^2,
+\end{equation}
+
+\noindent where $b^i$ is the glacier bed height at grid point $i$, $\Delta x$ is the grid spacing, and $\gamma_{bed}$ is the scaling factor based on the smoothness of the first guess bed height $b_{fg}$ ($\gamma_{bed}=\sum_{i=0}^{n_x-1} \left(\frac{b_{fg}^{i+1} - b_{fg}^{i}}{\Delta x}\right)^2$). The summation in this equation starts at $i=0$, because at the start of the flowline (the highest point), an additional grid point is introduced to preserve the bed slope. Without this extra grid point, the algorithm would lower the bed height at the highest point to match the height of the second-highest point, minimizing the smoothness term. This effect gets stronger with larger values of $\lambda$. The extra grid point acts as an additional regularization to counteract this effect, regardless of the value of $\lambda$.
+
+For our experiments we defined $\mathcal{J}_{reg} = \mathcal{J}_{reg,bed}$. However, this regularization framework could be extended in future studies, for instance, to include smoothness constraints on the initial flux. Such extensions will become increasingly important when working with real-world target observations, which are subject to measurement uncertainties. In these cases, regularization plays a crucial role in preventing the model from overfitting to noisy data.
+
+
+\subsection{Control variables}
+\label{sec:control_variabls}
+
+% In theory anything can be a control variable thanks to AGILE design with pytorch
+Control variables, denoted as $\boldsymbol{\Theta} = [\Theta_1, \Theta_2, ..., \Theta_n]$, are adjusted at each iteration to minimize the cost function (see Sect. \ref{sec:cost_function}). They represent the unknown parameters or variables to be estimated or optimised. In theory, these can include any unknown aspect of the system, such as flowline-geometry parameters (e.g. glacier bed height), dynamic parameters (e.g. the deformation-sliding parameter A of Equation \ref{eqn:shallow_ice_velocity}), MB model parameters (e.g. melt factor), or a combination of these. The flexibility of AD enables the simultaneous calculation of gradients for multiple control variables, providing essential information to guide the minimization algorithm (see Sect. \ref{sec:first_guess_method}). However, this is constrained by observational data availability and the risk of overfitting.
+
+% In this study, the control variables are... This is because...
+In this study, we set the control variables to be the glacier bed elevation and the distributed ice volume in 1980 at each grid point. This choice reflects our primary goal: to demonstrate, as a proof-of-concept, that variables with different types, meanings, and magnitudes can be optimized simultaneously within each iteration. We also aim to explore whether AGILE can (i) improve upon the current OGGM bed inversion, which assumes equilibrium and may introduce biases for non-steady-state glaciers, and (ii) reconstruct glacier conditions in 1980. The second objective is of secondary importance and mainly serves to enable transient simulations from 1980 to 2020. This allows us to incorporate target observations at their respective timestamps, such as the area-hight distribution and the total volume both in 2000, as well as the geodetic mass balance from 2000 to 2020. The goal is to obtain a dynamically consistent glacier state in 2020, which is not part of the optimization but is important for initializing future projections.
+
+% normalization of control variables
+To handle control variables with varying magnitudes, we apply min-max normalization. For a given control variable $\Theta_x$, this scaling is defined as
+
+\begin{equation}
+    \Theta_{x,scaled} = \frac{\Theta_x - \Theta_{x,min}}{\Theta_{x,max} - \Theta_{x,min}},
+\end{equation}
+
+\noindent where $\Theta_{x,min}$ and $\Theta_{x,max}$ represent the defined minimum and maximum bounds, respectively. This ensures all scaled variables are within the range [0, 1], making changes proposed by the minimization algorithm approximately proportional across all variables. The minimum and maximum values for the bed heights are defined such that the resulting ice thickness at the time of the observed outline and DEM remains within $\pm 60\%$ of the first-guess estimate. Similarly, the 1980 ice volume at each grid point is constrained within $\pm 40\%$ of the first guess. Additionally, ten extra grid points are added beyond the terminus for the ice volume, allowing the glacier to be initialized with a larger extent than observed. For these extra points, the scaling boundaries are set to 0 and the maximum value at the terminus grid point (140\% of the first guess volume).
+
+% how to deal with not constant grid cell size along the flowline
+We must also account for the varying areas of grid-cells in the 1.5D flowline representation (see Sect. \ref{sec:Glacier_representation_and_forward_model}) and their impact on glacier-wide properties when they are changed. For example, a change in the bed height affects the glacier area-height distribution more in a larger grid cell than in a smaller one. To account for this, we multiply the glacier bed height by the initial surface width at each grid point and use the resulting values as our control variables. The initial surface width is set during flowline initialization to preserve the observed area-height distribution and remains constant throughout minimization (see Sect. \ref{sec:Glacier_representation_and_forward_model}). We use width instead of grid-cell area because the spacing along the flowline is the same for all grid cells, making it a constant factor. The 1980 glacier volume at each grid point naturally accounts for varying grid-cell sizes. For the actual control variables, we divide the volume by the constant grid-cell spacing along the flowline and use the resulting volume per unit length as the control. This corresponds to the cross section area at each grid point.
+
+
+\subsection{First guess and minimization}
+\label{sec:first_guess_method}
+
+% how do we optain the first guess of our control variables,
+To initiate the algorithm, an initial estimate of the control variables, specifically the glacier bed height and the 1980 volume distribution, is required. In our experiments, we used two methods to generate these estimates, allowing us to assess AGILE’s sensitivity to the first guess. The first method relies on the default OGGM bed inversion, a mass-conserving approach based on an equilibrium assumption and an apparent mass balance, as described in \citet{Maussion2019}. The second uses the shear-stress-based GlabTop method \citep{Linsbauer2012}, which depends solely on surface geometry.
+
+In both cases, the estimated bed geometry directly provides the initial values for both the bed height and the 1980 volume distribution. However, it is important to note that the volume estimates from both methods correspond to the outline year (2000), and we introduce a temporal mismatch by using them as the first guess 1980 volume distribution.
+
+% which minimisation algorithm
+The minimization process is conducted using the L-BFGS-B algorithm \citep{Byrd1995, Zhu1997, Morales2011}, as implemented in the \textsf{Python} package \textsf{SciPy} \citep[][\href{https://www.scipy.org/}{https://www.scipy.org/}]{2020SciPy-NMeth}. This algorithm, commonly used in similar applications \citep[e.g.,][]{Goldberg2013, Fuerst2017}, supports bounded constraints for the control variables. We set the bounds for the control variables to our defined minimum and maximum values as described in Sect. \ref{sec:control_variabls}.
+
+
+\section{Experiments}
+\label{sec:experiments}
+
+% add here clearly the goal of the experiments
+The goal of these experiments is to demonstrate that AGILE can recover both the glacier bed heights along the flowline and the dynamic glacier state in 2020 by performing a dynamic simulation from 1980 to 2020. A key objective is to show that AGILE can improve upon OGGM’s bed inversion, which assumes glacier equilibrium and may introduce errors for retreating or advancing glaciers, while also initializing the model with a realistic dynamic glacier state in 2020. To achieve this, we define the control variables as the glacier bed height and the ice volume in 1980 at each grid point (see Sect. \ref{sec:control_variabls}).
+
+% observations we plan to use
+The target observations are based on globally available datasets, used here in an idealized setting. Specifically, we use an area–height distribution and a total volume estimate for the year 2000, along with a geodetic mass balance between 2000 and 2020. This setup is considered idealized because we exclude uncertainties in both mass balance forcing and ice dynamics. While this simplification does not reflect real-world complexity, it serves as a proof of concept, demonstrating that AGILE is correctly implemented and that gradients obtained with AD can be used to optimize multiple control variables simultaneously.
+
+% experiment setup
+To create a controlled test environment, we generate synthetic glaciers using OGGM and treat the model output as observations. This gives us complete knowledge of the system, allowing us to directly assess the accuracy of our methodology. This type of setup, often referred to as an "inverse crime" \citep{Colton2013}, offers an optimistically favourable testing environment. However, demonstrating robust and reliable performance under such idealized conditions is an essential first step for validating a new inversion method \citep{Goldberg2013}.
+
+\subsection{Creation of synthetic glaciers and measurements}
+\label{sec:creation_of_synthetic_glaciers}
+
+% glacier geometry and dynamic states
+The idealized experiments are designed to replicate realistic glacier geometries. We selected the glaciers Aletsch, Artesonraju, Baltoro, and Peyto because they represent a range of different climates and glacier area size. For each glacier, a flowline is constructed using the RGI v6 outline \citep{RGI}, DEM data from NASADEM \citep{NASADEM}, and the consensus ice thickness estimate \citep{Farinotti2019}. Based on these flowlines, we generate dynamic glacier simulations from 1980 to 2020 for three different dynamic states: retreating, advancing, and equilibrium.
+
+In particular, the retreating and advancing cases allow us to evaluate whether AGILE can improve upon OGGM’s bed inversion, which assumes a glacier is in equilibrium. The resulting glacier geometries, shown in  Figure \ref{fig:aletsch_geometry_creation} panels a and b for Aletsch, and in Figure \ref{fig_sup:geometry_creation_artesonraju_baltoro_peyto} panels a and b for Artesonraju, panels e and f for Baltoro, and panels i and j for Peyto, serve as the ground truth we aim to invert for.
+
+% driving mb model and dynamics
+The driving mass balance is defined using a simple degree-day model \citep[see Equation 1 in][]{Schuster2023}, with precipitation and temperature inputs taken from the W5E5 dataset \citep{W5E5} for each glacier’s location. Precipitation factors (ranging from 1.4 to 5.2), degree-day factors (3.1 to 6.5 kg m$^{-2}$ °C$^{-1}$ day$^{-1}$), and temperature biases (−5.6 to 0.9 °C) follow the calibration values from OGGM v1.6. The deformation-sliding parameter $A$ (ranging from 0.1 to 7.9 * 10$^{-24}$ s$^{-1}$ Pa$^{-3}$) is also taken from OGGM v1.6, leading to different dynamic behaviors for each synthetic glacier.
+
+An additional temperature bias is applied on top to create either retreating or advancing glaciers. Equilibrium glaciers are generated using a mean mass balance profile calculated over a specific time period from the W5E5 data. Figure \ref{fig:aletsch_geometry_creation} panels c and d show the resulting mass balance and volume evolution for the different dynamic states of the Aletsch glacier. For the other glaciers, see Figure \ref{fig_sup:geometry_creation_artesonraju_baltoro_peyto} panels c and d for Artesonraju, panels g and h for Baltoro, and panels k and l for Peyto.
+
+% measurements taken during creation
+During the creation of the synthetic glaciers, we "measure" the target observations used in our experiments. Specifically, we record the surface elevation at each grid point in the year 2000 ($sfc_{2000}$) for capturing the area height distribution (for details see Sect. \ref{subsec:cost_obs}), the total glacier volume in 2000 ($V_{2000}$), and the geodetic mass balance from 2000 to 2020 ($\Delta M_{2000/2020}$). We define the associated measurement uncertainties as $\sigma_{sfc}=10~\mathrm{m}$, $\sigma_{\Delta M}=100~\mathrm{kg~m^{-2}~yr^{-1}}$  and $\sigma_{V}=10\%~ \mathrm{of}~V_{2000}$. These target observations are designed to reflect the type of readily available global datasets and represent the only inputs provided to both the first-guess methods and AGILE in our experiments.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=8.3cm]{fig02.png}
+    \caption{Synthetic glacier geometry inspired by Aletsch, shown for retreating, equilibrium, and advancing glacier states. Panel (a) displays the defined glacier bed, ice thickness along the flowline, and area-height distribution for the year 2000. Panel (b) presents the volume distribution along the flowline for the year 2000. Panel (c) illustrates the driving mass balance used during the simulation from 1980 to 2020, and panel (d) shows the corresponding total glacier volume over the same period.}
+    \label{fig:aletsch_geometry_creation}
+\end{figure}
+
+
+
+\subsection{Performance measurements}
+\label{sec:performance_measurements}
+
+% what do we use for assessing performance and why
+To evaluate how well AGILE can reconstruct the glacier bed and the dynamic glacier state in 2020, we track the mean absolute difference (MAD) of key variables throughout the optimization process. Specifically, we compute the MAD of the glacier bed elevation (MAD\_BED) and the distributed ice volume in 2020 (MAD\_V\_2020). Since the simulation runs dynamically from 1980 to 2020 and the distributed volume in 1980 is one of the control variables, we also calculate the MAD of the distributed ice volume in 1980 (MAD\_V\_1980). Although we do not expect to accurately reconstruct the 1980 glacier state, given the lack of target observations before 2000 and the inherently diffusive nature of glacier dynamics, tracking MAD\_V\_1980 still offers valuable insight into how strongly diffusion limits the ability to recover past glacier states.
+
+
+\section{Results and Discussion}
+\label{sec:results}
+
+We begin by evaluating the performance of the two first guess methods in Sect. \ref{sec:first_guess_performance}, with a particular focus on the glacier bed. As noted in Sect. \ref{sec:first_guess_method}, a temporal mismatch is introduced in the first guess of the 1980 volume distribution, which limits the interpretability at this stage.
+
+This is followed by an in-depth analysis of the synthetic Aletsch glacier geometry in a retreating dynamic state (Sect. \ref{sec:aletsch_retreating}). This includes an evaluation of AGILE’s core functionality (Sect. \ref{subsec:prove of concept}), the impact of different cost function settings (Sect. \ref{subsec:different_cost_altesch_retreating}), and the influence of various first-guess methods (Sect. \ref{subsec:influence_fg_aletsch-retreating}).
+
+Finally, we generalize our findings across the different dynamic states and glacier geometries used in the experiments (Sect. \ref{sec:influence_geometry_dynamic_state}). In Sect. \ref{subsec:principle_functionality_different_geometries_and_state}, we assess AGILE’s core performance using a fixed $\lambda$ value of 0.01. Sect. \ref{subsec:Diff_along_fl_all_glacier_geometries_dynamic_states} investigates the recovery of control variables along the flowline. Lastly, in Sect. \ref{subsec:differenc_cost_settings_all_geometries}, we analyze the impact of various cost function settings, including different $\lambda$ values and varying numbers of target observations, across all glacier geometries for both retreating and advancing cases.
+
+\subsection{First guess performance}
+\label{sec:first_guess_performance}
+
+% first guess results with performance measures
+Using our synthetic glacier measurements, we evaluated the two first guess methods described in Sect. \ref{sec:first_guess_method}. At this stage, we focus only on the glacier bed, as the use of a 2000-based distributed volume estimate to represent the 1980 distribution introduces a temporal mismatch (see Sect. \ref{sec:first_guess_method}). In later analyses, however, we return to the 1980 volume distribution to assess AGILE’s ability to reconstruct past glacier states prior to the first available observation.
+
+% look a bit closer at first guess bed of OGGM
+Starting with OGGM's first guess glacier bed, Figure \ref{fig:aletsch_fg_bed} shows the best performance in the equilibrium state, with a maximum absolute difference of 39.5 m. This is expected, as OGGM’s bed inversion is based on the assumption of a glacier in equilibrium. In the retreating and advancing states, bed elevations are underestimated and overestimated, respectively, particularly near the terminus, with maximum absolute differences of 56.1 m (retreating) and 70.5 m (advancing). This pattern is consistent across all glaciers and aligns with previous findings \citep[e.g. Figure 5, panel d in][]{Maussion2019}, emphasizing the importance of evaluating performance across different dynamic states.
+
+% look a bit closer at first guess bed of GlabTop
+In contrast, the first guess glacier bed of the GlabTop method shows similar behavior across all dynamic states, as it relies solely on surface geometry and does not incorporate any mass balance forcing. The maximum absolute differences for Aletsch in Figure \ref{fig:aletsch_fg_bed} are 96.0 m (retreating), 100.9 m (equilibrium), and 162.2 m (advancing). This behavior is consistent across all tested geometries.
+
+% all performacne measurements for all glaciers
+For all other glacier geometries and dynamic states the performance metrics of the two first guess methods are summarized in Table \ref{tab:sup_fg_statistics}, using mean absolute differences for bed height (MAD\_BED), distributed volume in 1980 (MAD\_V\_1980), and in 2020 (MAD\_V\_2020). The MAD\_V\_2020 metric is computed after running the glacier evolution model from 1980 to 2020 with the prescribed mass balance. The OGGM values listed in the table are later used to normalize performance metrics, allowing for easier assessment of whether AGILE improves upon the OGGM first-guess results.
+
+Across all cases, Table \ref{tab:sup_fg_statistics} shows that OGGM generally performs as well as or better than GlabTop, with the most accurate results seen in equilibrium states. This trend is particularly pronounced for the Baltoro glacier, where OGGM outperforms GlabTop by nearly an order of magnitude. Consequently, Baltoro represents an especially relevant case for evaluating AGILE’s ability to improve upon poor initial guesses that deviate strongly from the synthetic truth.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=8.3cm]{fig03.png}
+    \caption{Difference between the synthetic glacier bed for Altesch and the first guess glacier bed for the two first guess methods, OGGM and GlabTop (see Sect. \ref{sec:first_guess_performance}), shown for all three dynamic states: retreating, equilibrium, and advancing.}
+    \label{fig:aletsch_fg_bed}
+\end{figure}
+
+
+\subsection{Aletsch retreating}
+\label{sec:aletsch_retreating}
+
+\subsubsection{Proof of concept for AGILE functionality}
+\label{subsec:prove of concept}
+
+The first experiment showcases the proper functionality of AGILE and illustrates that gradient calculations are working as expected. For this we selected our synthetic Aletsch-retreating case and set $\lambda$ to 0.01 (see equation \ref{eqn:general_cost_function}). Further we use all three target observations we took during the glacier creation, as defined in Sect. \ref{sec:creation_of_synthetic_glaciers} ($sfc_{2000}$, $V_{2000}$ and $\Delta M_{2000/2020}$) and our first guess is coming from OGGM. Our control variables consist of the distributed volume in 1980 as well as the bed height at each grid point, which gives in total 120 control variables.
+
+Figure \ref{fig:aletsch_retreating_fg_oggm_and_fg_glabtop_cost_stats} panel a shows the evolution of the cost function over 20 iterations, with the largest decrease occurring in the first two iterations, reducing the cost from 2.3 to 0.2. This demonstrates that the gradient-informed updates to the 120 control variables are working as intended. The correctness of the gradient calculations, along with the simultaneous updating of all control variables, is further highlighted by AGILE requiring only 21 forward model runs for 20 iterations (see Figure \ref{fig:aletsch_retreating_fg_oggm_and_fg_glabtop_cost_stats} panel c), with most iterations needing just one run to find a smaller cost value. This indicates that the minimization algorithm rarely performs 'search' runs, where updates to control variables fail to reduce the cost.
+
+Examining individual cost components (Figure \ref{fig:aletsch_retreating_fg_oggm_and_fg_glabtop_cost_stats}, panels a and b), the largest initial contributor is the mismatch to observed surface heights along the flowline $sfc_{2000}$, followed by the volume $V_{2000}$ and the geodetic mass balance $\Delta M_{2000/2020}$ terms. The $sfc_{2000}$ mismatch significantly decreased after two iterations, becoming smaller than $\Delta M_{2000/2020}$, but later increasing slightly again. This highlights that not all observation mismatches decrease monotonically and may temporarily increase as the total cost continues to decrease. The regularization term, starting at 0.005, remained almost constant throughout the iterations. However, as the total cost decreases, its relative importance grows, eventually becoming the dominant cost component after 13 iterations (Figure \ref{fig:aletsch_retreating_fg_oggm_and_fg_glabtop_cost_stats}, panel b).
+
+Analyzing the performance metrics (MAD\_BED, MAD\_V\_1980, and MAD\_V\_2020) over iterations (Figure \ref{fig:aletsch_retreating_fg_oggm_and_fg_glabtop_cost_stats} panel c) confirms that reductions in the cost function led to improved agreement with the synthetic truth. Significant improvements were observed for both the bed height and the distributed volume in 2020 compared to the first guess. While the distributed volume for 1980 initially worsened during the early iterations, it began improving relative to the first guess after the sixth iteration.
+
+Figure \ref{fig:aletsch_retreating_fg_oggm_baltoro_advancing_fg_oggm_along_fl} shows how differences between the modeled and synthetic truth evolved along the flowline, in particular panel a difference of the bed height, panel b difference of the distributed volume 1980 and panel c difference of the distributed volume 2020. Improvements are evident across most of the flowline, except near the highest points (start of the flowline, at 0 distance). At these points, a persistent noisy pattern is observed. However, this pattern is confined to the initial few grid points, with the majority of the flowline showing substantial improvements.
+
+This experiment demonstrates AGILE’s ability to adapt 120 control variables in just a few iterations, achieving significant improvements over the OGGM-provided first guess. Additionally, the computational demand is minimal, with each iteration (forward model run and gradient calculation) taking approximately 1.3 seconds for the Aletsch geometry on a laptop equipped with an 11th Gen Intel(R) Core(TM) i7-1165G7 CPU (2.8 GHz) and 16 GB RAM (see Table \ref{tab_sup:number_control_vars_cpu_runtime} for other computing times of other dynamic states and geometries). The gradient calculation, specifically the backward propagation through the computing graph (see Appendix \ref{appendix:AD_in_Pytorch}), requires only around 0.1 seconds, or roughly ten percent of the total iteration. This efficiency makes the method highly promising for regional to global-scale applications.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=8.3cm]{fig04.png}
+    \caption{Evolution of the cost function and performance metrics for Aletsch retreating, starting from the OGGM first guess (panels a to c) and GlabTop first guess (panels d to f), with a $\lambda$ value of 0.01. Panels a and d shows the evolution of the cost function over minimization iterations, with individual cost terms represented in different colors. The relative contribution of the cost terms to the total cost is shown in panels b and e. Panels c and f illustrates the evolution of performance metrics over the same iterations. The numbers in boxes along the x-axis indicate the total number of forward model runs required for each corresponding iteration.}
+    \label{fig:aletsch_retreating_fg_oggm_and_fg_glabtop_cost_stats}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=8.3cm]{fig05.png}
+    \caption{Differences between the synthetic truth and AGILE guess after 10 and 20 iterations along the flowline for Aletsch retreating (panels a to c) and Baltoro advancing (panels d to f), starting from the OGGM first guess (0 Iteration) with a $\lambda$ value of 0.01. Panels a and d shows the differences in bed height, panels b and e shows the differences in volume for 1980, and panels c and f shows the differences in volume for 2020. All differences are displayed for every grid point along the flowline.}
+    \label{fig:aletsch_retreating_fg_oggm_baltoro_advancing_fg_oggm_along_fl}
+\end{figure}
+
+\subsubsection{Different cost function settings}
+\label{subsec:different_cost_altesch_retreating}
+
+Since the cost function is central to AGILE, we tested various configurations to evaluate its performance. Specifically, we explored 30 different values of $\lambda$, including 0 (no regularization) and 29 values ranging logarithmically from $10^{-4}$ to $10^{3}$. Additionally, we varied the number of provided target observations ($sfc_{2000}$, $V_{2000}$ and $\Delta M_{2000/2020}$) across seven configurations: using only one of the three target observations, all combinations of two target observations, and all three target observations together. The performance metrics (MAD\_BED and MAD\_V\_2020) for Aletsch retreating and advancing, using OGGM for the first guess, after 20 iterations are shown in Figure \ref{fig:aletsch_all_cost_fcts}.
+
+When varying $\lambda$, we observed small improvements when transitioning from no regularization ($\lambda = 0$) to small values of $\lambda$. However, as $\lambda$ increased further, performance worsened. This indicates that overly large regularization weights cause AGILE to prioritize smoothing the bed over matching target observations. It is important to note that in this experiment, we used perfectly accurate target observations. With real, imperfect data, regularization becomes more crucial to prevent overfitting, which explains why $\lambda = 0$ performed well under these idealized conditions.
+
+When using only a single target observation type, $sfc_{2000}$ yielded the best results across the widest range of $\lambda$ values. This is expected, as surface height provides distributed information about the glacier's slope along the flowline, while $V_{2000}$ and $\Delta M_{2000/2020}$ are integrated over the entire glacier. Interestingly, even with only providing $V_{2000}$, small $\lambda$ values improved MAD\_V\_2020.
+
+Combining two target observations consistently outperformed single target observations, especially when $sfc_{2000}$ were included. Notably, combining $V_{2000}$ and $\Delta M_{2000/2020}$ produced significant improvements compared to using either target observation alone. Furthermore, using two target observations broadened the range of $\lambda$ values that yielded improvements over the first guess.
+
+Using all three target observations simultaneously did not provide substantial benefits compared to configurations that included two target observations, particularly when $sfc_{2000}$ was one of them. This suggests that two target observations may already provide sufficient information for the control variables for this particular experiment.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=8.3cm]{fig06.png}
+    \caption{MAD\_BED and MAD\_V\_2020, normalized by the OGGM first guess values, for Aletsch retreating (dot and solid line) and advancing (cross and dotted line) after 20 iterations, starting from the OGGM first guess. The y-axis shows the number of provided target observations, and the x-axis shows different values of $\lambda$ ($\lambda$ = 0 is shown with a dot or a cross to the left of the axis). The gray shaded are indicates the region where the OGGM first guess could be improved after 20. Iterations.}
+    \label{fig:aletsch_all_cost_fcts}
+\end{figure}
+
+
+\subsubsection{Influence of first guess}
+\label{subsec:influence_fg_aletsch-retreating}
+
+This section compares AGILE’s performance when starting from the OGGM first guess versus the GlabTop first guess. As shown in Figure \ref{fig:aletsch_retreating_fg_oggm_and_fg_glabtop_cost_stats} panels a and d, the initial cost value at iteration 0 is significantly higher for GlabTop (10.1) than for OGGM (2.3), due to larger mismatches with the target observations ($sfc_{2000}$, $V_{2000}$, and $\Delta M_{2000/2020}$). Despite this, AGILE effectively minimizes the cost function, reaching a comparable value to OGGM's initial cost after three iterations and continuing to decrease thereafter.
+
+Examining the performance metrics (Figure \ref{fig:aletsch_retreating_fg_oggm_and_fg_glabtop_cost_stats} panels g), we find that at Iteration 0, GlabTop has a slightly better MAD\_BED compared to OGGM, while MAD\_V\_1980 and MAD\_V\_2020 are approximately twice as large. With further iterations, all three metrics improve. After three iterations, MAD\_V\_2020 improves enough to outperform the OGGM first guess (value < 1). However, MAD\_V\_1980 shows only minor improvement after 20 iterations and remains roughly twice as large as the value achieved with OGGM.
+
+These results highlight that starting from a worse first guess, such as GlabTop, can reduce the accuracy of reconstructing the glacier state in 1980. This limitation is partly due to the diffusive nature of glacier dynamics, which leads to a gradual loss of information over time during dynamic simulations. Nonetheless, AGILE demonstrates its ability to improve even a poor first guess, successfully refining the glacier bed and simultaneously initialize the model with the 2020 dynamic glacier state.
+
+
+\subsection{Influence of glacier geometry and dynamic state}
+\label{sec:influence_geometry_dynamic_state}
+
+To evaluate the impact of glacier geometry and the dynamic state, we generated 12 synthetic glaciers representing four geometries (Aletsch, Artesonraju, Baltoro, and Peyto) in three dynamic states: retreating, equilibrium, and advancing, as outlined in Sect. \ref{sec:creation_of_synthetic_glaciers}. First, we examine the core functionality of minimizing the cost across these 12 settings in Sect. \ref{subsec:principle_functionality_different_geometries_and_state}. Next, we analyze how the differences between the synthetic truth and the estimates of AGILE along the flowline evolve with iterations in Sect. \ref{subsec:Diff_along_fl_all_glacier_geometries_dynamic_states}. Finally, we investigate the effects of different cost function settings in Sect. \ref{subsec:differenc_cost_settings_all_geometries}.
+
+\subsubsection{Functionality of minimizing the cost}
+\label{subsec:principle_functionality_different_geometries_and_state}
+
+In the equilibrium experiments, the OGGM first guess performs very well, which is expected given its underlying equilibrium assumption. The only exception is Baltoro, where the first guess for the equilibrium case closely resembles that of the retreating case. As a result, the minimization process also mirrors the retreating scenario.
+
+As an example of typical behavior in the equilibrium case, Figure \ref{fig:aletsch_eq_fg_oggm_baltoro_ret_fg_glabtop} panels a–c show the results for the Aletsch geometry starting from the OGGM first guess. The strong performance of the OGGM first guess is evident in the low initial total cost of just 0.18 (panel a), indicating that mismatches for all observations fall within their defined uncertainty ranges, suggesting that further optimization is not strictly necessary. Nonetheless, AGILE is able to refine the solution and improve upon this already strong first guess, as shown by the decreasing values of the performance metrics in panel c.
+
+To assess AGILE’s performance when starting from a first guess that significantly deviates from the synthetic truth, Figure \ref{fig:aletsch_eq_fg_oggm_baltoro_ret_fg_glabtop}, panels d–e, shows the results for the Baltoro geometry initialized with the GlabTop first guess. The poor initial performance is evident from the high total cost of 82.5 (panel d) and large values of the performance metrics, around 10, which means they are approximately ten times higher than those for the OGGM first guess.
+
+Despite this challenging starting point, AGILE is able to substantially improve the solution. After 20 iterations, it reaches performance levels close to those of the OGGM first guess, with values around 1.4 (where 1 indicates equal performance to the OGGM first guess). When AGILE is allowed to continue beyond 20 iterations, it further improves the results, achieving values around 0.5 for both MAD\_BED and MAD\_V\_2020 after 40 iterations (not shown in panel e). However, MAD\_V\_1980 does not improve further beyond 20 iterations, highlighting the limited recoverability of the 1980 glacier state.
+
+This pattern, where MAD\_BED and MAD\_V\_2020 improve more significantly than MAD\_V\_1980, is observed in many experiments. For example, Figure \ref{fig:aletsch_eq_peyto_re_fg_oggm}, panel c (Artesonraju, advancing) and panel g (Peyto, retreating), both starting from the OGGM first guess, show similar behavior. This highlights the broader challenge of reconstructing past glacier states in the absence of direct observations, regardless of glacier geometry or dynamic state. As discussed earlier, this limitation stems from the diffusive nature of glacier dynamics and the resulting loss of information over time.
+
+For all glacier geometries and dynamic states, AGILE required 21 to 27 model runs over 20 iterations, demonstrating its ability to efficiently inform the minimization algorithm with accurate gradients. An exception was the retreating Peyto experiment (Figure \ref{fig:aletsch_eq_peyto_re_fg_oggm}, panel g), where the number of model runs increase a lot from Iteration 14 ongoing. This hints that the minimisation algorithm has difficulties in further minimising the cost as probably a local minimum is reached. For real-world applications, AGILE includes an option to limit the number of forward model runs (default: 100) to reduce computational effort. Forward model run times varied between 0.7 and 2.5 seconds (see Table \ref{tab_sup:number_control_vars_cpu_runtime}), depending on the maximum glacier velocity and corresponding time-step constraints imposed by the stability criterion (Equation \ref{eqn:stability_criterion}).
+
+\begin{figure}
+    \centering
+    \includegraphics[width=8.3cm]{fig07.png}
+    \caption{Same as Figure \ref{fig:aletsch_retreating_fg_oggm_and_fg_glabtop_cost_stats}, for Aletsch (a, b and c) equilibrium using OGGM first guess, and Baltoro (d, e and f) equilibrium using GlabTop first guess.}
+    \label{fig:aletsch_eq_fg_oggm_baltoro_ret_fg_glabtop}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=8.3cm]{fig08.png}
+    \caption{Same as Figure \ref{fig:aletsch_retreating_fg_oggm_and_fg_glabtop_cost_stats}, for Artesonraju advancing (a, b and c) and Peyto retreating (d, e and f) starting from the OGGM first guess.}
+    \label{fig:aletsch_eq_peyto_re_fg_oggm}
+\end{figure}
+
+\subsubsection{Distributed differences along the flowline}
+\label{subsec:Diff_along_fl_all_glacier_geometries_dynamic_states}
+
+Examining differences along the flowline for bed height (DIF\_BED), and distributed volumes in 1980 (DIF\_V\_1980) and 2020 (DIF\_V\_2020) reveals improvements at most grid points, regardless of dynamic state or first-guess method. However, one notable exception occurs in the Baltoro advancing case (Figure \ref{fig:aletsch_retreating_fg_oggm_baltoro_advancing_fg_oggm_along_fl}, panels d–f), where AGILE was unable to correct an overly high glacier bed at the terminus. Despite this limitation, clear improvements are observed between 5–25 km along the flowline. As a large portion of the glacier’s total volume is located within this section (Figure \ref{fig_sup:geometry_creation_artesonraju_baltoro_peyto}, panel f), the distributed volume is still significantly improved.
+
+Noisy patterns in flowline differences appear in several cases, such as Aletsch retreating and Baltoro advancing (Figure \ref{fig:aletsch_retreating_fg_oggm_baltoro_advancing_fg_oggm_along_fl}). With increasing iterations, these patterns seen in DIF\_BED, are either dampened or remain stable in DIF\_V\_2020, and occasionally are amplified in DIF\_V\_1980. The variability depends on the corresponding glacier volume along the flowline (Figure \ref{fig:aletsch_geometry_creation}, panel b; Figure \ref{fig_sup:geometry_creation_artesonraju_baltoro_peyto}, panels b, f, and j). These patterns likely reflect the diffusive nature of glacier dynamics and the inherent limitations in accurately inverting for distributed glacier volume when relying on glacier-integrated observations.
+
+
+\subsubsection{Performance Across Cost Function Settings}
+\label{subsec:differenc_cost_settings_all_geometries}
+
+We analyze here the impact of different cost function settings ($\lambda$ values and number of provided target observations) for retreating and advancing cases, focusing on individual glacier geometries. All experiments analysed start from the OGGM first guess and we evaluate the performance depending if the first guess can be improved by looking at MAD\_BED and MAD\_V\_2020. Additionally, we consider the range of $\lambda$ values that result in improved performance. In general, larger $\lambda$ values increase the regularization term, favouring a smoother glacier bed. When $\lambda$ becomes too large, the cost function prioritizes bed smoothing over matching the target observations, leading to worse performance.
+
+For Aletsch, in both the retreating case and the advancing case, surface height observations ($sfc_{2000}$) were the most influential in improving MAD\_BED and MAD\_V\_2020 over the OGGM first guess (Figure \ref{fig:aletsch_all_cost_fcts}). Among two-observation combinations, $sfc_{2000}$ and $\Delta M_{2000/2020}$ provided the best performance, followed by $\Delta M_{2000/2020}$ and $V_{2000}$. Adding $V_{2000}$ to $sfc_{2000}$ resulted in only minimal additional improvement. The most significant gains were achieved when using all three observations together.
+
+For Artesonraju (Figure \ref{fig:artensonraju_baltoro_peyto_all_cost_fcts}, panels a to g), $sfc_{2000}$ was by far the most important target observation. Even when used alone, it achieved results comparable to using two or all three observations. Combining $V_{2000}$ and $\Delta M_{2000/2020}$ did not outperform using these observations individually.
+
+For Baltoro (Figure \ref{fig:artensonraju_baltoro_peyto_all_cost_fcts}, panels h to n), in the retreating case (solid lines) single observations alone were insufficient to improve upon the first guess, with $V_{2000}$ showing the best performance. Combining $V_{2000}$ with either $sfc_{2000}$ or $\Delta M_{2000/2020}$ resulted in substantial improvements, with the best performance achieved using all three target observations. For the advancing case (dotted lines), $sfc_{2000}$ alone was sufficient to improve MAD\_BED and MAD\_V\_2020, with further gains observed when combining target observations.
+
+In the retreating case for Peyto (solid lines in Figure \ref{fig:artensonraju_baltoro_peyto_all_cost_fcts}, panels o to u), simultaneous improvement of MAD\_BED and MAD\_V\_2020 was only achieved by using all three target observations. For other configurations, improving one metric often led to no improvement or degradation in the other. In the advancing case (dotted lines), $sfc_{2000}$ alone improved both metrics, with further improvements observed when combining target observations, though using all three added little additional value.
+
+The importance of specific target observations varies with glacier geometry and dynamic state. While it is challenging to disentangle the roles of geometry and state, increasing the number of target observations consistently improves performance. All cases benefit from using all three target observations, though in some instances, performance with one or two target observations is nearly equivalent.
+
+Further, the results demonstrate that the range of effective $\lambda$ values is relatively broad, with many retreating and advancing cases performing well for $\lambda$ values between $10^{-4}$ and $10^{-1}$. The use of $\lambda = 0$ also performs effectively in our experiments with perfectly accurate measurements, as overfitting is not a concern. However, in real-world applications where observations contain uncertainties, the regularization term becomes critical for preventing such an overfitting.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=8.3cm]{fig09.png}
+    \caption{Same as Figure \ref{fig:aletsch_all_cost_fcts} for Artesonraju (panels a to g), Baltoro (panels h to n), and Peyto (panels o to u).}
+    \label{fig:artensonraju_baltoro_peyto_all_cost_fcts}
+\end{figure}
+
+
+\conclusions[Conclusion and future work]  %% \conclusions[modified heading if necessary]
+\label{sec:conclusion}
+
+Our experiments show that AGILE can adjust many control variables in just a few iterations, proving that the gradient calculations using AD work well. Adding more target observations makes the inversion more reliable, but in some cases, good results can be achieved with fewer target observations. Reconstructing the glacier volume in 1980 was harder than in 2020 because no direct target observations were used before 2000, and the diffusive nature of glacier dynamics, which leads to a gradual loss of information over time during dynamic simulations.
+
+These results are promising, but AGILE has not yet been tested on real-world data. Its flexibility offers many possibilities, but these need careful exploration. For example, with new glacier bed estimates becoming available \citep[e.g.,][]{Cook2023, vanPelt2025}, AGILE could focus on other aspects, like combining the calibration of glacier dynamics and mass balance models. Setting up test cases with plenty of observations for validation will be key to understanding what AGILE can do in practical applications.
+
+In our idealized experiments, we assumed the target observations were perfect, so regularization was less important. In real-world cases, where observations are uncertain, regularization will be critical to avoid overfitting. Finding the right balance for the regularization weight ($\lambda$) will be necessary. Techniques like L-curves \citep[see, e.g.,][]{Hansen1992, GilletChaulet2012, Recinos2023, Wolovick2023}, could help in deciding this balance.
+
+The next step for applying AGILE to real-world problems would be to include a differentiable mass balance model. A simple temperature index model \citep[e.g.,][]{Marzeion2012} could be a good starting point. For more complex mass balance models \citep[e.g. PyGEM][]{Rounce2020} it will be important to check if their equations work with AD. Similarly, adding dynamic processes like calving or debris cover will require compatibility with AGILE’s AD framework. Therefor, AD may limit how complex the models can get, which is further restricted by the availability of target observations. On the other hand, AGILE’s ability to work with diverse datasets could support more complex models as more target observations become use-able in a consistent way.
+
+AGILE provides a promising way to integrate new datasets as they become available or to use all available glacier-specific observations in a consistent way. This could help address the issue of equifinality in global glacier modeling \citep[e.g.][]{Rounce2020} by combining all available information. Additionally, AGILE could generate consistent glacier histories, filling in data gaps from the past (e.g., creating a reanalysis dataset for glaciers) or providing a solid starting point for future projections.
+
+%% The following commands are for the statements about the availability of data sets and/or software code corresponding to the manuscript.
+%% It is strongly recommended to make use of these sections in case data sets and/or software code have been part of your research the article is based on.
+
+\codeavailability{AGILE is written in Python and is openly available on GitHub (https://github.com/OGGM/AGILE, last access: 7 July 2025) under a BSD 3-Clause License. Version 0.1 of AGILE is additionally archived on Zenodo with a permanent DOI \citep{AGILEv0.1}. To ensure full reproducibility of the experiments presented in this study, we provide Docker images that are publicly available via GitHub Packages (https://github.com/OGGM/AGILE/pkgs/container/agile, last access: 7 July 2025). All results shown in this work were produced using the Docker image agile:20230525.} %% use this section when having only software code available
+
+
+%\dataavailability{TEXT} %% use this section when having only data sets available
+
+
+%\codedataavailability{TEXT} %% use this section when having data sets and software code available
+
+
+%\sampleavailability{TEXT} %% use this section when having geoscientific samples available
+
+
+%\videosupplement{TEXT} %% use this section when having video supplements available
+
+
+\appendix
+\section{Model implementations using PyTorch}    %% Appendix A
+
+\subsection{Automatic Differentiation in PyTorch}
+\label{appendix:AD_in_Pytorch}
+
+PyTorch implements automatic differentiation (AD) using a system called Autograd, which is designed for deep learning optimization tasks. This system enables the construction of a dynamic computation graph and efficient gradient computation. We use this system in our forward model by replacing NumPy arrays with PyTorch tensors.
+
+During a forward pass, PyTorch constructs a dynamic computational graph that keeps track of all operations on tensors requiring gradients, in our case the control variables. For those, all operations involving this tensor are tracked for later differentiation.
+
+After the forward pass, we call PyTorch's .backward() function on the cost function tensor. This triggers PyTorch to compute the gradient of that tensor with respect to all tensors requiring gradients, in our case the partial derivatives of our control variables with respect to the cost function. This computation is done by propagating the computational graph backward and applying the chain rule
+
+\begin{equation}
+    \frac{dy}{dz} = \frac{dy}{dx}\frac{dx}{dz}
+\end{equation}
+
+\noindent for each operation applied during the forward pass. To achieve this, PyTorch stores the derivatives of all standard operations.
+
+PyTorch also allows users to add custom operations by defining both a forward computation and a corresponding backward computation (the derivative of the forward computation). This can be useful for optimizing parts of the code where the derivatives are known. We applied this approach in our Semi-Implicit solver (see Sect. \ref{appendix:semi_impicit}).
+
+\subsection{Semi-Implicit Solver including AD}     %% Appendix A1, A2, etc.
+\label{appendix:semi_impicit}
+
+With the idea of a global application in mind, AGILE uses the same 1.5D flowline representation as OGGM. In particular, AGILE uses one flowline with changing widths. The bed shape is trapezoidal, with a constant wall angle of 45°. The flowlines are generated from the geographical input date using the 'elevation band flowlines' method \citep[e.g.][]{Huss2012, Huss2015, Werder2019}.
+
+The glacier evolution model from OGGM \citep[originally introduced by][]{Oerlemans1997} 
+
+\begin{equation}
+\label{eqn:advection_cross_section}
+    \frac{\partial C}{\partial t} = w \Dot{m} - \nabla \cdot q
+\end{equation}
+
+% https://oggm.org/2020/07/08/numerics/
+\noindent is adapted in AGILE and re-implemented with PyTorch. This advection equation for the cross-section area $C$ (m$^2$) provides flexibility for varying surface widths $w$ (m) and allows the use of mixed bed shapes with the same equation. Further $\Dot{m}$ is the mass balance (kg m$^{-2}$ s$^{-1}$), $q = C u$ is the ice flux (m$^3$ s$^{-1}$) and $u$ is the depth-integrated shallow-ice velocity (m s$^{-1}$). This velocity is defined as
+
+\begin{equation} \label{eqn:shallow_ice_velocity}
+    u = \left( \frac{2A}{n+2} h + f_s \frac{1}{h} \right)\left(- \rho g h \frac{\partial s}{\partial x} \right)^n
+\end{equation}
+
+\noindent where $A$ is the ice creep parameter (s$^{-1}$ Pa$^{-3}$), $n$ is the exponent of Glen's flow law ($n$ = 3), $h$ is the ice thickness (m), $f_s$ is a sliding parameter (s$^{-1}$ Pa$^{-3}$), $\rho$ is the ice density (900 kg m$^{-3}$), $g$ is the gravitational acceleration (9.81 m s$^{-2}$) and $\frac{\partial s}{\partial x}$ is the surface slope, where $s$ is the surface height (m). By default, the sliding parameter $f_s$ is set to 0 s$^{-1}$ Pa$^{-3}$ because there are currently no methods/observations available on a global scale to distinguish the contributions of ice deformation (defined by $A$) and sliding to the total velocity.
+
+Besides the explicit forward finite difference approximation scheme of OGGM also a semi-implicit scheme is included in AGILE. The reason for this is that numeric instabilities can occur (a known problem, see e.g. \url{https://oggm.org/2020/01/18/stability-analysis/} and \url{https://oggm.org/2020/07/08/numerics/}) which cause problems when using AD. In particular, during the backward pass for the gradient calculation, these instabilities are amplified and dominate the resulting gradients. The semi-implicit scheme was derived by starting from equation \ref{eqn:advection_cross_section} and rearranging it from an advection equation into a diffusion equation
+
+\begin{equation}\label{eqn:dC/dt}
+    \frac{\partial C}{\partial t} = w \Dot{m} + \nabla \cdot (D\frac{\partial s}{\partial x})
+\end{equation}
+
+\noindent with Diffusivity D
+
+\begin{equation}\label{eqn:diffusivitiy_with_C}
+    D = \left(\frac{2 A}{n + 2} h + f_s \frac{1}{h} \right) (\rho g h)^n \lvert \frac{\partial s}{\partial x} \rvert^{n - 1} C.
+\end{equation}
+
+In the following the derivation of the semi-implicit scheme using a rectangular cross-section $C = wh$ is shown. This simplifies the problem because for a rectangular bed shape the surface width is not changing over time ($\frac{\partial C}{\partial t} = \frac{\partial wh}{\partial t} = w\frac{\partial h}{\partial t}$). Afterwards, this solution is generalised for a trapezoidal cross-section. First, we modify equation \ref{eqn:dC/dt} by using the rectangular cross-section area
+
+\begin{equation}\label{eqn:dh/dt}
+    \frac{\partial h}{\partial t} = \Dot{m} + \frac{1}{w} \nabla \cdot (D\frac{\partial s}{\partial x})
+\end{equation}
+
+\noindent with Diffusivity $D$
+
+\begin{equation}
+    D = \left(\frac{2 A}{n + 2} h^2 + f_s \right) (\rho g h)^n \lvert \frac{\partial s}{\partial x} \rvert^{n - 1} w.
+\end{equation}
+
+For the discretization, the ice flux $q$ is defined on a staggered grid denoted with indices $i \pm 1/2$. Further using $(\nabla q)_i = \frac{q_{i+1/2} - q_{i-1/2}}{\Delta x}$, $\left(\frac{\partial s}{\partial x}\right)_{i+1/2} = \frac{s_{i+1} - s_i}{\Delta x}$ and $q^t = D^t \left(\frac{\partial s}{\partial x}\right)^{t+1}$ we get
+
+\begin{equation}
+    \frac{h_{i}^{t+1} - h_{i}^{t}}{\Delta t} = \Dot{m} + \frac{1}{w_i}\frac{D_{i+1/2}^{t} \left(\frac{s_{i+1}^{t+1} - s_{i}^{t+1}}{\Delta x}\right) - D_{i-1/2}^{t} \left(\frac{s_{i}^{t+1} - s_{i-1}^{t+1}}{\Delta x}\right)}{\Delta x}.
+\end{equation}
+
+\noindent For spatial interpolation of variables from the unstaggered to the staggered grid an arithmetic mean value is used. This is needed in the calculation of $D$ for $h$ and $w$  (e.g. $h_{i+1/2} = \frac{h_i + h_{i+1}}{2}$).
+
+Next, we rearrange the equation to put all terms involving the future time-step $t+1$ on the left side
+
+\begin{equation}
+    h_{i}^{t+1} -  \frac{\Delta t}{\Delta x^2 w_i}\left(D_{i-1/2}^{t} s_{i-1}^{t+1} - (D_{i+1/2}^{t} + D_{i-1/2}^{t}) s_{i}^{t+1} + D_{i+1/2}^{t} s_{i+1}^{t+1}\right) = h_{i}^{t} + \Delta t \Dot{m}.
+\end{equation}
+
+\noindent and use the definition of the surface height $s=b+h$ (where the glacier bed height $b$ is constant over time) together with a vector notation
+
+\begin{equation}
+\begin{aligned}
+     \begin{bmatrix}
+     - \frac{\Delta t}{\Delta x^2 w_i} D_{i-1/2}^{t} &
+     1 + \frac{\Delta t}{\Delta x^2 w_i} (D_{i+1/2}^{t} + D_{i-1/2}^{t}) & 
+     - \frac{\Delta t}{\Delta x^2 w_i} D_{i+1/2}^{t}
+     \end{bmatrix}
+     \cdot
+     \begin{bmatrix}
+     h_{i-1}^{t+1} \\
+     h_{i}^{t+1} \\
+     h_{i+1}^{t+1}
+     \end{bmatrix}& = \\
+     h_{i}^{t} + \Delta t \Dot{m} + \frac{\Delta t}{\Delta x^2 w_i}
+     \begin{bmatrix}
+     D_{i-1/2}^{t} &
+     -(D_{i+1/2}^{t} + D_{i-1/2}^{t}) &
+     D_{i+1/2}^{t}
+     \end{bmatrix}
+     \cdot
+     \begin{bmatrix}
+     b_{i-1} \\
+     b_{i} \\
+     b_{i+1}
+     \end{bmatrix}&.
+\end{aligned}
+\end{equation}
+
+Finally, this equation can be used to set up a final linear equation for all grid points. We include the boundary conditions $D_{-1/2} = D_{nx + 1/2} = 0$ for all time steps, where $nx$ denotes the last grid point of the unstaggered grid and the unstaggered grid starts with index 0. With this, we define two $nx \times nx$ matrices
+
+\begin{equation}
+\begin{aligned}
+    \boldsymbol{M}_{h}~=~ 
+    &\boldsymbol{\delta}_{i+1, j} \cdot
+    \begin{bmatrix}
+        -\frac{\Delta t}{\Delta x^2 w_0} D_{-1/2} \\
+        -\frac{\Delta t}{\Delta x^2 w_1} D_{1/2} \\
+        \vdots \\
+        -\frac{\Delta t}{\Delta x^2 w_{nx}} D_{nx - 1/2}
+    \end{bmatrix}
+    + \\
+    +~&\boldsymbol{\delta}_{i, j} \cdot
+    \begin{bmatrix}
+        1 + \frac{\Delta t}{\Delta x^2 w_0} (D_{-1/2} + D_{1/2}) \\
+        1 + \frac{\Delta t}{\Delta x^2 w_1} (D_{1/2} + D_{3/2}) \\
+        \vdots \\
+        1 + \frac{\Delta t}{\Delta x^2 w_{nx}} (D_{nx - 1/2} + D_{nx + 1/2})
+    \end{bmatrix}
+    + \\
+    +~&\boldsymbol{\delta}_{i, j+1} \cdot
+    \begin{bmatrix}
+        -\frac{\Delta t}{\Delta x^2 w_0} D_{1/2} \\
+        -\frac{\Delta t}{\Delta x^2 w_1} D_{3/2} \\
+        \vdots \\
+        -\frac{\Delta t}{\Delta x^2 w_{nx}} D_{nx + 1/2}
+    \end{bmatrix}
+\end{aligned}
+\end{equation}
+
+\noindent and
+
+\begin{equation}
+\begin{aligned}
+    \boldsymbol{M}_b ~=~ 
+    &\boldsymbol{\delta}_{i+1, j} \cdot 
+    \begin{bmatrix}
+        \frac{\Delta t}{\Delta x^2 w_0} D_{-1/2} \\
+        \frac{\Delta t}{\Delta x^2 w_1} D_{1/2} \\
+        \vdots \\
+        \frac{\Delta t}{\Delta x^2 w_{nx}} D_{nx - 1/2}
+    \end{bmatrix}
+    + \\
+    +~&\boldsymbol{\delta}_{i, j} \cdot
+    \begin{bmatrix}
+        - \frac{\Delta t}{\Delta x^2 w_0} (D_{-1/2} + D_{1/2}) \\
+        - \frac{\Delta t}{\Delta x^2 w_1} (D_{1/2} + D_{3/2}) \\
+        \vdots \\
+        - \frac{\Delta t}{\Delta x^2 w_{nx}} (D_{nx - 1/2} + D_{nx + 1/2})
+    \end{bmatrix}
+    + \\
+    +~&\boldsymbol{\delta}_{i, j+1} \cdot
+    \begin{bmatrix}
+        \frac{\Delta t}{\Delta x^2 w_0} D_{1/2} \\
+        \frac{\Delta t}{\Delta x^2 w_1} D_{3/2} \\
+        \vdots \\
+        \frac{\Delta t}{\Delta x^2 w_{nx}} D_{nx + 1/2}
+    \end{bmatrix}
+\end{aligned}
+\end{equation}
+
+\noindent where $\boldsymbol{\delta}$ is the Kronecker delta defined as
+
+\begin{equation}
+    \boldsymbol{\delta}_{i, j} = 
+    \begin{cases}
+    0 ~\mathrm{if}~ i \neq j \\
+    1 ~\mathrm{if}~ i = j
+    \end{cases}
+\end{equation}
+
+\noindent and 
+
+\begin{equation*}
+    \boldsymbol{\delta}_{i+1, j} = 
+    \begin{bmatrix}
+        0 & 0  & \cdots & 0 &  0_{nx} \\
+        1 & 0  & \cdots & 0 & 0 \\
+        0 & 1  & \cdots & 0 & 0 \\
+        \vdots & \vdots & \ddots & \vdots & \vdots \\
+        0 & 0  & \cdots & 1 & 0_{nx} \\
+    \end{bmatrix},~
+    \boldsymbol{\delta}_{i, j + 1} = 
+    \begin{bmatrix}
+        0 & 1 & 0 & \cdots &  0_{nx} \\
+        0 & 0 & 1 & \cdots & 0 \\
+        \vdots & \vdots & \vdots & \ddots & \vdots \\
+        0 & 0 & 0 & \cdots & 1 \\
+        0 & 0 & 0 & \cdots & 0_{nx} \\
+    \end{bmatrix}.
+\end{equation*}
+
+\noindent The final linear equation we solve is defined as
+
+\begin{equation}\label{eqn:final_implicit_equation}
+    \boldsymbol{M}_h \cdot
+    \begin{bmatrix}
+        h_{0}^{t+1} \\
+        h_{1}^{t+1} \\
+        \vdots \\
+        h_{nx}^{t+1}
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        h_{0}^{t} \\
+        h_{1}^{t} \\
+        \vdots \\
+        h_{nx}^{t}
+    \end{bmatrix}
+    + \Delta t \Dot{m} + \boldsymbol{M}_b \cdot
+    \begin{bmatrix}
+        b_{0} \\
+        b_{1} \\
+        \vdots \\
+        b_{nx}
+    \end{bmatrix}
+\end{equation}
+
+\noindent which can be solved by using the function \textsf{scipy.linalg.solve\_banded} from the Python package \textsf{SciPy} \citep{2020SciPy-NMeth}.
+
+This solution for a rectangular cross-section can be generalized to a trapezoidal cross-section by using the definition of the area
+
+\begin{equation}\label{eqn:trap_cross_section}
+    C = \frac{1}{2}(w + w_0)h,
+\end{equation}
+
+\noindent where $w_0$ is the bottom width (m) and the surface width $w$ (m) is defined as
+
+\begin{equation}\label{eqn:trap_surface_width_def}
+    w = w_0 + \eta h,
+\end{equation}
+
+\noindent where $\eta$ defines the angle of the side wall (e.g. $\eta$=2 is a 45° wall angle). Now we can use this definition of the cross-section area in the definition of the diffusivity (equation \ref{eqn:diffusivitiy_with_C})
+
+\begin{equation}\label{eqn:diffusivity_trap}
+    D = \left(\frac{2 A}{n + 2} h^2 + f_s \right) (\rho g h)^n \lvert \frac{\partial s}{\partial x} \rvert^{n - 1} \frac{w_0 + w}{2}.
+\end{equation}
+
+\noindent Further we can rewrite $\frac{\partial C}{\partial t}$ by inserting the trapezoidal cross-section (equation \ref{eqn:trap_cross_section}) together with the surface width definition (equation \ref{eqn:trap_surface_width_def}) to get
+
+\begin{equation}
+    \frac{1}{2} \frac{\partial}{\partial t} (h(2w_0 + \eta h)) =  \frac{1}{2} \frac{\partial h}{\partial t}(2w_0 + \eta h) + \frac{1}{2} h \eta \frac{\partial h}{\partial t} = \frac{1}{2} (2w_0 + 2\eta h) \frac{\partial h}{\partial t} = w \frac{\partial h}{\partial t}.
+\end{equation}
+
+\noindent With this we are able to rewrite equation \ref{eqn:dC/dt} again into equation \ref{eqn:dh/dt} and use our solution derived before. The only difference is that we need to use the diffusivity of the trapezoidal cross-section defined in equation \ref{eqn:diffusivity_trap}.
+
+For the time-stepping the stability criterion
+
+\begin{equation}
+\label{eqn:stability_criterion}
+    \Delta t <= cfl\_nr \frac{\Delta x^2}{\mathrm{max}(D_{i+1/2}/w_{i+1/2})}
+\end{equation}
+
+\noindent is used. This criterion derives from a linearised form of equation \ref{eqn:dh/dt} (assuming D is constant), which will become a heat equation with diffusivity $D/w$. Therefore the stability criterion of the heat equation is adapted here. The $cfl\_nr$ was set to 0.5 following \cite{Hindmarsh2001} equation 91.
+
+To use this semi-implicit solver now in AGILE we further need a differentiable version of the linear equation solver \textsf{scipy.linalg.solve\_banded}. Otherwise, the linear solve would need too many operations and the computational graph (see Sect. \ref{appendix:AD_in_Pytorch} more infos about the computational graph) will become very large and hence the memory consumption when using AD. For this, a new function is defined which uses the original \textsf{SciPy} solver during the forward pass, which solves equation \ref{eqn:final_implicit_equation} for $\boldsymbol{h}^{t+1}$ by
+
+\begin{equation}
+    \boldsymbol{h}^{t+1} = \boldsymbol{M}_h^{-1} \cdot \boldsymbol{rhs}
+\end{equation}
+
+\noindent where
+
+\begin{equation}
+    \boldsymbol{h}^{t+1} =
+    \begin{bmatrix}
+        h_{0}^{t+1} \\
+        h_{1}^{t+1} \\
+        \vdots \\
+        h_{nx}^{t+1}
+    \end{bmatrix}
+\end{equation}
+\noindent and
+\begin{equation}
+    \boldsymbol{rhs} = \begin{bmatrix}
+        h_{0}^{t} \\
+        h_{1}^{t} \\
+        \vdots \\
+        h_{nx}^{t}
+    \end{bmatrix}
+    + \Delta t \Dot{m} + \boldsymbol{M}_b \cdot
+    \begin{bmatrix}
+        b_{0} \\
+        b_{1} \\
+        \vdots \\
+        b_{nx}
+    \end{bmatrix}.
+\end{equation}
+
+For the backward pass of this newly defined function, the equations 7 and 8 from \cite{Goldberg2013} are used to calculate the adjoints $\delta^*\boldsymbol{M}_h$ and $\delta^* \boldsymbol{rhs}$ with
+
+\begin{equation}
+    \delta^*\boldsymbol{rhs} = \boldsymbol{M}_h^{-T} * \delta^* \boldsymbol{h}^{t+1}
+\end{equation}
+
+\noindent and
+
+\begin{equation}
+    \delta^*\boldsymbol{M}_h = - \delta^* \boldsymbol{rhs} \cdot (\boldsymbol{h}^{t+1})^T \odot (\boldsymbol{\delta}_{i, j + 1} + \boldsymbol{\delta}_{i, j} + \boldsymbol{\delta}_{i + 1, j}),
+\end{equation}
+
+\noindent where $\odot$ is an element-wise matrix multiplication. This matrix multiplication ensures that we only get gradients of the non-zero elements of $\boldsymbol{M}_h$. The $\delta^*$ notation is used for the adjoints and how they are connected to the gradients is explained in more detail in \cite{Goldberg2013}. The implementation of the gradient calculation of this new function was tested against a finite-difference approximation using \textsf{torch.autograd.gradcheck} from Pytorch.
+
+\subsection{Mass-Balance Model wrapper}     %% Appendix A1, A2, etc.
+\label{appendix:mb_model_wrapper}
+
+% Explain use of differentiable linear interpolation
+The idea of the wrapper is to circumvent the need to re-implementing part of the modelling chain with PyTorch, but still incorporate its influence on the gradient calculation. The downside is that with this you can not obtain gradients of parameters used in the wrapped part.
+
+In our case, we decided to put the MB model forcing into a wrapper. The MB model gives us for each year a value for the climatic MB depending on the height $mb_{orig}(height)$. The MB height profile is defined each year by the temperature and precipitation input.
+
+The idea is to utilize the differentiable 1d interpolation tool from https://github.com/aliutkus/torchinterp1d. With this, we define constant height bins $h_{bins}$ which cover the vertical glacier extension. The differentiable MB wrapper finally looks like
+
+\begin{equation}
+    mb_{torch, i}(h) = \mathrm{torcheinterp1d}(h_{bins}, mb_{orig, i}(h_{bins}))(h)
+\end{equation}
+
+for a year $i$.
+
+This method works best if the desired modelling part is smooth and does not change too much depending on the input. The spacing of bins ($h_{bins}$ in our case) should be determined by the variability of the output of the wrapped function.
+
+\noappendix       %% use this to mark the end of the appendix section. Otherwise the figures might be numbered incorrectly (e.g. 10 instead of 1).
+
+%% Regarding figures and tables in appendices, the following two options are possible depending on your general handling of figures and tables in the manuscript environment:
+
+%% Option 1: If you sorted all figures and tables into the sections of the text, please also sort the appendix figures and appendix tables into the respective appendix sections.
+%% They will be correctly named automatically.
+
+%% Option 2: If you put all figures after the reference list, please insert appendix tables and figures after the normal tables and figures.
+%% To rename them correctly to A1, A2, etc., please add the following commands in front of them:
+
+%\appendixfigures  %% needs to be added in front of appendix figures
+
+%\appendixtables   %% needs to be added in front of appendix tables
+
+%% Please add \clearpage between each table and/or figure. Further guidelines on figures and tables can be found below.
+
+
+
+\authorcontribution{P.G. initiated the development of AGILE during his master’s thesis, after an idea of F.M.. P.S. continued this work in his own master’s thesis and subsequently implemented the methods presented in this study. D.G. designed the semi-implicit numeric scheme and P.S. implemented it. P.S. conceptualized the study, designed the idealized experiment setup, and carried out the analysis with continuous input from all co-authors. P.S. and F.M. wrote the manuscript with contributions from all authors.} %% this section is mandatory
+
+\competinginterests{The authors declare that they have no conflict of competing interest.} %% this section is mandatory even if you declare that no competing interests are present
+
+%\disclaimer{TEXT} %% optional section
+
+\begin{acknowledgements}
+P.S. and F.M. received funding from the European Union’s Horizon 2020 research and innovation programme (grant agreement no. 101003687) (PROVIDE), from the Austrian Climate Research Programme (ACRP) – 14th call, under grant agreement no. KR21KB0K00001 (HyMELT-CC), and from ESA's “Digital Twin Component for Glaciers” project (4000146160/24/I-KE).
+\end{acknowledgements}
+
+
+
+
+%% REFERENCES
+
+%% The reference list is compiled as follows:
+
+%% \begin{thebibliography}{}
+%%
+%% \bibitem[AUTHOR(YEAR)]{LABEL1}
+%% REFERENCE 1
+%%
+%% \bibitem[AUTHOR(YEAR)]{LABEL2}
+%% REFERENCE 2
+%%
+%% \end{thebibliography}
+
+%% Since the Copernicus LaTeX package includes the BibTeX style file copernicus.bst,
+%% authors experienced with BibTeX only have to include the following two lines:
+
+\bibliographystyle{copernicus}
+\bibliography{mybibfile}
+
+%% URLs and DOIs can be entered in your BibTeX file as:
+%%
+%% URL = {http://www.xyz.org/~jones/idx_g.htm}
+%% DOI = {10.5194/xyz}
+
+
+%% LITERATURE CITATIONS
+%%
+%% command                        & example result
+%% \citet{jones90}|               & Jones et al. (1990)
+%% \citep{jones90}|               & (Jones et al., 1990)
+%% \citep{jones90,jones93}|       & (Jones et al., 1990, 1993)
+%% \citep[p.~32]{jones90}|        & (Jones et al., 1990, p.~32)
+%% \citep[e.g.,][]{jones90}|      & (e.g., Jones et al., 1990)
+%% \citep[e.g.,][p.~32]{jones90}| & (e.g., Jones et al., 1990, p.~32)
+%% \citeauthor{jones90}|          & Jones et al.
+%% \citeyear{jones90}|            & 1990
+
+
+
+%% FIGURES
+
+%% When figures and tables are placed at the end of the MS (article in one-column style), please add \clearpage
+%% between bibliography and first table and/or figure as well as between each table and/or figure.
+
+% The figure files should be labelled correctly with Arabic numerals (e.g. fig01.jpg, fig02.png).
+
+
+%% ONE-COLUMN FIGURES
+
+%%f
+%\begin{figure}[t]
+%\includegraphics[width=8.3cm]{FILE NAME}
+%\caption{TEXT}
+%\end{figure}
+%
+%%% TWO-COLUMN FIGURES
+%
+%%f
+%\begin{figure*}[t]
+%\includegraphics[width=12cm]{FILE NAME}
+%\caption{TEXT}
+%\end{figure*}
+%
+%
+%%% TABLES
+%%%
+%%% The different columns must be seperated with a & command and should
+%%% end with \\ to identify the column brake.
+%
+%%% ONE-COLUMN TABLE
+%
+%%t
+%\begin{table}[t]
+%\caption{TEXT}
+%\begin{tabular}{column = lcr}
+%\tophline
+%
+%\middlehline
+%
+%\bottomhline
+%\end{tabular}
+%\belowtable{} % Table Footnotes
+%\end{table}
+%
+%%% TWO-COLUMN TABLE
+%
+%%t
+%\begin{table*}[t]
+%\caption{TEXT}
+%\begin{tabular}{column = lcr}
+%\tophline
+%
+%\middlehline
+%
+%\bottomhline
+%\end{tabular}
+%\belowtable{} % Table Footnotes
+%\end{table*}
+%
+%%% LANDSCAPE TABLE
+%
+%%t
+%\begin{sidewaystable*}[t]
+%\caption{TEXT}
+%\begin{tabular}{column = lcr}
+%\tophline
+%
+%\middlehline
+%
+%\bottomhline
+%\end{tabular}
+%\belowtable{} % Table Footnotes
+%\end{sidewaystable*}
+%
+%
+%%% MATHEMATICAL EXPRESSIONS
+%
+%%% All papers typeset by Copernicus Publications follow the math typesetting regulations
+%%% given by the IUPAC Green Book (IUPAC: Quantities, Units and Symbols in Physical Chemistry,
+%%% 2nd Edn., Blackwell Science, available at: http://old.iupac.org/publications/books/gbook/green_book_2ed.pdf, 1993).
+%%%
+%%% Physical quantities/variables are typeset in italic font (t for time, T for Temperature)
+%%% Indices which are not defined are typeset in italic font (x, y, z, a, b, c)
+%%% Items/objects which are defined are typeset in roman font (Car A, Car B)
+%%% Descriptions/specifications which are defined by itself are typeset in roman font (abs, rel, ref, tot, net, ice)
+%%% Abbreviations from 2 letters are typeset in roman font (RH, LAI)
+%%% Vectors are identified in bold italic font using \vec{x}
+%%% Matrices are identified in bold roman font
+%%% Multiplication signs are typeset using the LaTeX commands \times (for vector products, grids, and exponential notations) or \cdot
+%%% The character * should not be applied as mutliplication sign
+%
+%
+%%% EQUATIONS
+%
+%%% Single-row equation
+%
+%\begin{equation}
+%
+%\end{equation}
+%
+%%% Multiline equation
+%
+%\begin{align}
+%& 3 + 5 = 8\\
+%& 3 + 5 = 8\\
+%& 3 + 5 = 8
+%\end{align}
+%
+%
+%%% MATRICES
+%
+%\begin{matrix}
+%x & y & z\\
+%x & y & z\\
+%x & y & z\\
+%\end{matrix}
+%
+%
+%%% ALGORITHM
+%
+%\begin{algorithm}
+%\caption{...}
+%\label{a1}
+%\begin{algorithmic}
+%...
+%\end{algorithmic}
+%\end{algorithm}
+%
+%
+%%% CHEMICAL FORMULAS AND REACTIONS
+%
+%%% For formulas embedded in the text, please use \chem{}
+%
+%%% The reaction environment creates labels including the letter R, i.e. (R1), (R2), etc.
+%
+%\begin{reaction}
+%%% \rightarrow should be used for normal (one-way) chemical reactions
+%%% \rightleftharpoons should be used for equilibria
+%%% \leftrightarrow should be used for resonance structures
+%\end{reaction}
+%
+%
+%%% PHYSICAL UNITS
+%%%
+%%% Please use \unit{} and apply the exponential notation
+
+\include{supplement} 
+
+\end{document}
