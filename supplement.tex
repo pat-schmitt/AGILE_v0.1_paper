@@ -62,17 +62,6 @@
 \renewcommand{\tablename}{Table}
 \renewcommand{\thetable}{S\arabic{table}}
 
-% geometry creation plots and first guess bed
-\begin{landscape}
-\begin{figure}
-    \centering
-    \includegraphics[width=21cm]{sup_fig01.png}
-    \caption{Same as Figure \ref{fig:aletsch_geometry_creation} for Artesonraju (a, b, c and d), Baltoro (e, f, g and h) and Peyto (i, j, k and l).}
-    \label{fig_sup:geometry_creation_artesonraju_baltoro_peyto}
-\end{figure}
-\end{landscape}
-
-
 % statistics all glaciers and dynamic states
 \begin{table}[]
 \begin{tabular}{@{}llllll@{}}
@@ -103,7 +92,7 @@ Peyto            & retreating    & OGGM               & 4                & 0.28 
                  & equilibrium   & OGGM               & 0.6              & 0.1                       & 0.09                      \\
                  &               & GlabTop            & 3.8              & 0.61                      & 0.64                      \\ \bottomrule
 \end{tabular}
-\caption{}
+\caption{Performance matrices MAD\_BED, MAD\_V\_1980 and MAD\_V\_2020 for all glacier geometries, all dynamic states and the two used first guess methods.}
 \label{tab:sup_fg_statistics}
 \end{table}
 
@@ -129,6 +118,16 @@ Peyto                & retreating    & 72                       & 0.71          
 \label{tab_sup:number_control_vars_cpu_runtime}
 \end{table}
 
+% geometry creation plots and first guess bed
+\begin{landscape}
+\begin{figure}
+    \centering
+    \includegraphics[width=21cm]{supfig01.png}
+    \caption{Same as Figure 2 for Artesonraju (a, b, c and d), Baltoro (e, f, g and h) and Peyto (i, j, k and l).}
+    \label{fig_sup:geometry_creation_artesonraju_baltoro_peyto}
+\end{figure}
+\end{landscape}
+
 \received{}
 \pubdiscuss{} %% only important for two-stage journals
 \revised{}
@@ -138,7 +137,7 @@ Peyto                & retreating    & 72                       & 0.71          
 
 \clearpage
 
-\bibliographystyle{copernicus}
-\bibliography{mybibfile.bib}
+%\bibliographystyle{copernicus}
+%\bibliography{mybibfile.bib}
 
 \end{document}
