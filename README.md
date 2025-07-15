@@ -1,1 +1,1 @@
-This repository contains the manuscript submitted to Geoscientific Model Development, with identification number egusphere-2025-3401.
+This repository contains the manuscript 'The Open Global Glacier Data Assimilation Framework (AGILE) v0.1', submitted to Geoscientific Model Development, with identification number egusphere-2025-3401.
